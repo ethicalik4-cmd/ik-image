@@ -1,0 +1,201 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Image library</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #202a25;
+            --muted: #69736d;
+            --paper: #f4f5ef;
+            --surface: #ffffff;
+            --line: #dfe4dc;
+            --accent: #285b46;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--paper);
+            color: var(--ink);
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        main {
+            width: min(1120px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 54px 0 72px;
+        }
+
+        .heading {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 20px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .eyebrow, .date, .empty-state {
+            font-family: Arial, sans-serif;
+        }
+
+        .eyebrow {
+            margin: 0 0 10px;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(36px, 6vw, 62px);
+            font-weight: 400;
+            line-height: 1;
+        }
+
+        .count {
+            margin: 0 0 5px;
+            color: var(--muted);
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        .upload-form {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--line);
+            font-family: Arial, sans-serif;
+        }
+
+        .upload-form input[type="file"] {
+            max-width: 100%;
+            font: inherit;
+        }
+
+        .upload-form button {
+            min-height: 42px;
+            padding: 0 18px;
+            border: 0;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+        }
+
+        .upload-error {
+            flex-basis: 100%;
+            margin: 0;
+            color: #a42e25;
+            font-size: 14px;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+            gap: 22px;
+            padding-top: 28px;
+        }
+
+        .image-entry {
+            min-width: 0;
+            overflow: hidden;
+            background: var(--surface);
+            border: 1px solid var(--line);
+        }
+
+        .image-entry img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+            background: #e8ebe4;
+        }
+
+        .image-entry figcaption {
+            padding: 13px 15px 15px;
+        }
+
+        .image-name {
+            overflow-wrap: anywhere;
+            margin: 0;
+            font-size: 17px;
+        }
+
+        .date {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .missing-image {
+            display: grid;
+            min-height: 170px;
+            place-items: center;
+            color: var(--muted);
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            padding: 48px 20px;
+            border: 1px dashed #b9c4ba;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        @media (max-width: 520px) {
+            main { width: min(100% - 28px, 1120px); padding-top: 36px; }
+            .heading { align-items: start; flex-direction: column; }
+            .gallery { gap: 14px; padding-top: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <header class="heading">
+            <div>
+                <p class="eyebrow">Your collection</p>
+                <h1>Image library</h1>
+            </div>
+            <p class="count">{{ image|length }} image{{ image|length|pluralize }}</p>
+        </header>
+
+        <form class="upload-form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="id_image">Add an image</label>
+            {{ upload_form.image }}
+            <button type="submit">Upload</button>
+            {% if upload_form.image.errors %}<p class="upload-error" role="alert">{{ upload_form.image.errors|join:", " }}</p>{% endif %}
+        </form>
+
+        <section class="gallery" aria-label="Uploaded images">
+            {% for item in image %}
+                <figure class="image-entry">
+                    {% if item.image %}
+                        <img src="{{ item.image.url }}" alt="Uploaded image {{ forloop.counter }}">
+                    {% else %}
+                        <div class="missing-image">No image file attached</div>
+                    {% endif %}
+                    <figcaption>
+                        <p class="image-name">Image {{ forloop.counter }}</p>
+                        <p class="date">Added {{ item.created_at|date:"F j, Y" }}</p>
+                    </figcaption>
+                </figure>
+        {% empty %}
+            <p class="empty-state">No images have been added yet.</p>
+        {% endfor %}
+        </section>
+    </main>
+</body>
+</html>
